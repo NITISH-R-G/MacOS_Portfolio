@@ -1,4 +1,4 @@
-import {useRef} from "react";
+ import {useRef} from "react";
 import { Tooltip } from 'react-tooltip'
 import gsap from 'gsap';
 import {dockApps} from "../constants/index.js";
