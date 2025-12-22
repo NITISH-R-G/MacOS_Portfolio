@@ -1,8 +1,6 @@
-import { useRef } from "react";
+import React, { useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-
-gsap.registerPlugin(useGSAP);
 
 const FONT_WEIGHTS = {
     subtitle: { min: 100, max: 400, default: 100 },
@@ -14,9 +12,7 @@ const renderText = (text, className, baseWeight = 400) => {
         <span
             key={i}
             className={className}
-            style={{
-                fontVariationSettings: `"wght" ${baseWeight}`,
-            }}
+            style={{ fontVariationSettings: `"wght" ${baseWeight}` }}
         >
       {char === " " ? "\u00A0" : char}
     </span>
@@ -30,7 +26,7 @@ const setupTextHover = (container, type) => {
     const { min, max, default: base } = FONT_WEIGHTS[type];
 
     const animateLetter = (letter, weight, duration = 0.25) => {
-        return gsap.to(letter, {
+        gsap.to(letter, {
             duration,
             ease: "power2.out",
             fontVariationSettings: `"wght" ${weight}`,
@@ -38,20 +34,27 @@ const setupTextHover = (container, type) => {
     };
 
     const handleMouseMove = (e) => {
-        const { left } = container.getBoundingClientRect();
-        const mouseX = e.clientX - left;
+        const containerRect = container.getBoundingClientRect();
+        const mouseX = e.clientX - containerRect.left;
 
         letters.forEach((letter) => {
-            const { left: l, width: w } = letter.getBoundingClientRect();
-            const distance = Math.abs(mouseX - (l - left + w / 2));
+            const letterRect = letter.getBoundingClientRect();
+            const letterCenter =
+                letterRect.left -
+                containerRect.left +
+                letterRect.width / 2;
+
+            const distance = Math.abs(mouseX - letterCenter);
             const intensity = Math.exp(-(distance ** 2) / 20000);
 
-            animateLetter(letter, min + (max - min) * intensity);
+            const weight = base + (max - base) * intensity;
+            animateLetter(letter, weight);
         });
     };
 
-    const handleMouseLeave = () =>
-        letters.forEach((letter) => animateLetter(letter, base, 0.3));
+    const handleMouseLeave = () => {
+        letters.forEach((letter) => animateLetter(letter, base, 0.4));
+    };
 
     container.addEventListener("mousemove", handleMouseMove);
     container.addEventListener("mouseleave", handleMouseLeave);
@@ -67,31 +70,28 @@ const Welcome = () => {
     const subtitleRef = useRef(null);
 
     useGSAP(() => {
-        const titleCleanup = setupTextHover(titleRef.current, "title");
-        const subtitleCleanup = setupTextHover(subtitleRef.current, "subtitle");
+        const cleanupTitle = setupTextHover(titleRef.current, "title");
+        const cleanupSubtitle = setupTextHover(subtitleRef.current, "subtitle");
 
         return () => {
-            subtitleCleanup && subtitleCleanup();
-            titleCleanup && titleCleanup();
+            cleanupTitle?.();
+            cleanupSubtitle?.();
         };
-    }, []);
+    });
 
     return (
         <section id="welcome">
             <p ref={subtitleRef}>
                 {renderText(
-                    "Hey, I'm Nitish! Welcome to my",
+                    "Hey I'm Nitish! Welcome to my",
                     "text-3xl font-georama",
                     100
                 )}
             </p>
-            <h1 ref={titleRef} className="mt-7">
-                {renderText("portfolio", "text-9xl italic font-georama")}
-            </h1>
 
-            <div className="small-screen">
-                <p>This Portfolio is designed for desktop/tablet screens only.</p>
-            </div>
+            <h1 ref={titleRef} className="mt-7">
+                {renderText("portfolio", "text-9xl italic font-georama", 400)}
+            </h1>
         </section>
     );
 };

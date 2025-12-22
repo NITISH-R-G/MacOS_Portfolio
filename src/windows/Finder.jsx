@@ -17,7 +17,10 @@ const Finder = () => {
         if (["fig", "url"].includes(item.fileType) && item.href)
             return window.open(item.href, "_blank");
 
-        openWindow(`${item.fileType}${item.kind}`);
+        // open the appropriate file window and pass the file object as data
+        // so windows like `txtfile` and `imgfile` can render their content
+        const key = `${item.fileType}${item.kind}`; // e.g. 'txtfile', 'imgfile'
+        openWindow(key, item);
     };
 
     const renderList = (name, items) => (

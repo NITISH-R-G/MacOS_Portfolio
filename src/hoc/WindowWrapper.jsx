@@ -1,10 +1,12 @@
-import {useLayoutEffect, useRef} from "react";
+// WindowWrapper.jsx
+import { useLayoutEffect, useRef } from "react";
 import useWindowStore from "../store/window.js";
-import {useGSAP} from "@gsap/react";
+import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import {Draggable} from "gsap/Draggable";
+import Draggable from "gsap/Draggable"; // default import from plugin entry
 
-gsap.registerPlugin(Draggable, useGSAP);
+// register the Draggable plugin only
+gsap.registerPlugin(Draggable);
 
 const WindowWrapper = (Component, windowKey) => {
     const Wrapped = (props) => {
@@ -12,10 +14,10 @@ const WindowWrapper = (Component, windowKey) => {
         const { isOpen, zIndex } = windows[windowKey] || {};
         const ref = useRef(null);
 
+        // open animation when isOpen becomes true
         useGSAP(() => {
             const el = ref.current;
             if (!el || !isOpen) return;
-
             el.style.display = "block";
 
             gsap.fromTo(
@@ -25,16 +27,22 @@ const WindowWrapper = (Component, windowKey) => {
             );
         }, [isOpen]);
 
+        // make draggable once when element mounts
         useGSAP(() => {
             const el = ref.current;
             if (!el) return;
 
-            const [instance] = Draggable.create(el, { onPress: () => focusWindow(windowKey) });
+            // create Draggable instance and return cleanup
+            const instances = Draggable.create(el, {
+                onPress() {
+                    focusWindow(windowKey);
+                },
+            });
 
-            return () => instance.kill();
+            return () => {
+                instances.forEach((inst) => inst.kill && inst.kill());
+            };
         }, []);
-
-
 
         useLayoutEffect(() => {
             const el = ref.current;
@@ -50,7 +58,6 @@ const WindowWrapper = (Component, windowKey) => {
     };
 
     Wrapped.displayName = `WindowWrapper(${Component.displayName || Component.name || "Component"})`;
-
     return Wrapped;
 };
 
